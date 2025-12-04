@@ -4,18 +4,26 @@ import Link from "next/link"
 import { useStore } from "@/lib/useStore"
 import { shallow } from "zustand/shallow"
 import Cookies from "js-cookie"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
+import { Moon, Sun } from "lucide-react"
 
 export default function Header() {
   const user = useStore((s) => s.user)
   const setUser = useStore((s) => s.setUser)
   const setToken = useStore((s) => s.setToken)
   const bootstrap = useStore((s) => s.bootstrapFromCookies)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   // Инициализируем токен из Cookies при монтировании (один раз)
   useEffect(() => {
     bootstrap?.()
   }, [bootstrap])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = () => {
     Cookies.remove("token")
@@ -24,7 +32,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-border">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-2xl font-bold text-primary">
@@ -37,15 +45,29 @@ export default function Header() {
             <Link href="/new" className="text-foreground hover:text-primary transition">
               Создать курс
             </Link>
+            <Link href="/devs" className="text-foreground hover:text-primary transition">
+              Разработчики
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-lg hover:bg-accent transition-colors"
+            aria-label="Переключить тему"
+          >
+            {mounted && theme === "dark" ? (
+              <Sun className="h-5 w-5 text-foreground" />
+            ) : (
+              <Moon className="h-5 w-5 text-foreground" />
+            )}
+          </button>
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground">{user.email}</span>
+              <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
               <button
                 onClick={handleLogout}
-                className="px-3 py-1 bg-destructive text-destructive-foreground rounded-md text-sm hover:opacity-90 transition"
+                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors shadow-sm"
               >
                 Выход
               </button>
@@ -53,7 +75,7 @@ export default function Header() {
           ) : (
             <Link
               href="/new"
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:opacity-90 transition"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
             >
               Создать курс
             </Link>
